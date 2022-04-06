@@ -23,6 +23,13 @@ CREATE TABLE employees(
     department VARCHAR(30) NOT NULL,
     salary INT NOT NULL,
     manager VARCHAR(30) NOT NULL,
+    --FOREIGN KEY manager,
+    --REFERENCES managers.name
+);
+
+CREATE TABLE managers(
+    id INT PRIMARY KEY
+    name VARCHAR(30)
 );
 
 INSERT INTO departments (department)
@@ -44,4 +51,6 @@ VALUES
 
 INSERT INTO employees (firstName, lastName, job, department, salary, manager)
 VALUES
-    ('Justin', 'Miller',)
+    ('Justin', 'Miller', 'Welder', 'Metal', 60000, 'Jacob Gillian'),
+    ('Redhawk', 'Lucas', 'Carpenter', 'Wood', 60000, 'Victor Carmona'),
+    ('Holden', 'Stoner', 'Installation Tech', 60000, 'Mark Ermis')

@@ -14,7 +14,7 @@ const db = mysql.createConnection(
       host: 'localhost',      
       user: 'root',
       password: 'wildcat123',
-    //   rowsAsArray: true,
+      rowsAsArray: true,
       database: 'company_db'
     },
   );
@@ -37,11 +37,13 @@ const initialQuestion = () => {
             db.query('SELECT * FROM departments',(err, result) => {
                 console.table(result);
             });
+            initialQuestion();
         } 
         else if (response.action === 'View all roles'){
             db.query('SELECT * FROM roles',(err, result) => {
                 console.table(result);
             });
+            initialQuestion();
         } 
         else if (response.action === 'View all employees'){
             db.query('SELECT * FROM employees',(err, result) => {
@@ -59,7 +61,7 @@ const initialQuestion = () => {
         } 
         else if (response.action === 'Update an employee'){
             updateEmployee();
-        };;
+        };
     });
 };
 
@@ -72,10 +74,10 @@ const addDept = () => {
             message: "What is the name of the department?"
         }
     ).then (response => {
-        newDept = response;
+        newDept = response.department;
         db.query(`INSERT ${newDept} INTO departments`, (err, result) => {
             console.log('The department has been added');
-            console.log(result);
+            initialQuestion();
         })
     });
 };
@@ -84,13 +86,10 @@ const addDept = () => {
 const addRole = () => {
 
     //query db for depts and store in variable. make it an array (connection - rows as array: true)
+    deptChoices = db.query('SELECT * FROM departments')//, (err, result) => console.log(result);
+    console.log(deptChoices);
 
     inquirer.prompt([
-        {
-            type: 'input', // Dont need, does automatically
-            name: 'roleId',
-            message: "What is ID for this specific role?"
-        },
         {
             type: 'input',
             name: 'job',
@@ -100,7 +99,7 @@ const addRole = () => {
             type: 'list',
             name: 'department',
             message: "In which department does this role belong?",
-            choices: []  //usersRows = JSON.parse(JSON.stringify(result));
+            choices: [deptChoices]  //usersRows = JSON.parse(JSON.stringify(result));
         },
         {
             type: 'input',
