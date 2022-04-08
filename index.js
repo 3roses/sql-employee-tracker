@@ -23,6 +23,9 @@ const query = util.promisify(db.query).bind(db);
 
 console.log(`Connected to the company_db database.`)
 
+
+
+//====================================DISPLAY TABLES============================================================================
 async function queryDept() {
     await query('SELECT * FROM departments', (err, result) => {
         if (err) throw err;
@@ -45,6 +48,8 @@ async function queryEmployees() {
         initialQuestion();
     });
 }
+//===============================================================================================================================
+
 
 const initialQuestion = async () => {
 
@@ -82,19 +87,9 @@ const initialQuestion = async () => {
     });
 };
 
-async function insertDept(response){
 
-        let queryText = 'INSERT INTO departments (department) VALUES (?)'
 
-        await query(queryText, response.department, (err, results) => {
-
-            if (err) throw err;
-
-            console.log('The department has been added');
-            initialQuestion();
-        })
-}
-
+//============================================ADD DEPARTMENT====================================================================
 const addDept = async () => {
     inquirer.prompt(
         {
@@ -108,12 +103,30 @@ const addDept = async () => {
     });
 };
 
+async function insertDept(response){
 
+    let queryText = 'INSERT INTO departments (department) VALUES (?)'
+
+    await query(queryText, response.department, (err, results) => {
+
+        if (err) throw err;
+
+        console.log('The department has been added');
+        initialQuestion();
+    })
+}
+//===================================================================================================================================
+
+
+
+
+
+//===========================================ADD ROLE================================================================================
 const addRole = async () => {
 
-    //query db for depts and store in variable. make it an array (connection - rows as array: true)
+    //query db for depts and store in variable.
     let deptTable = 'SELECT department FROM departments'
-    let deptChoices = await query(deptTable) //, (err, result) => console.log(result);
+    let deptChoices = await query(deptTable)
     console.log(deptChoices[0].department);
     let deptArr = deptChoices.map(choice => choice.department);
     // console.log(deptArr);
@@ -140,7 +153,30 @@ const addRole = async () => {
     })
 }
 
+async function insertRole(response){
+    let queryText = 'SELECT id FROM departments WHERE department = (?)'
+    await query(queryText, response.department, (err, results) => {
 
+        if (err) throw err;
+
+        console.log(results[0].id);
+        let tempResult = results[0].id;
+
+        finalRoles(response, tempResult);
+        console.log('The role has been added');
+    })
+}
+async function finalRoles(response, tempResult){
+    let insertText = 'INSERT INTO roles (job, salary, dept_id) VALUES (?, ?, ?)'
+    await query(insertText, [response.job, response.salary, tempResult])
+    initialQuestion()
+}   
+//==============================================================================================================================
+
+
+
+
+//===============================================ADD EMPLOYEE====================================================================
 const addEmployee = async () => {
 
     let rolesTable = 'SELECT job FROM roles'
@@ -162,7 +198,7 @@ const addEmployee = async () => {
             message: "What is this employee's first name?"
         },
         {
-            type: 'list',
+            type: 'input',
             name: 'lastName',
             message: "What is this employee's last name?"
         },
@@ -173,20 +209,51 @@ const addEmployee = async () => {
             choices: rolesArr
         },
         {
-            type: 'input',
-            name: 'salary',
-            message: "What is this employee's salary?"
-        },
-        {
             type: 'list',
             name: 'manager',
             message: "Who is this employee's manager?",
             choices: employeesArr
         },
     ]).then (response => {
-        console.log(response);
+        employeeJob(response);
     })
 }
+
+async function employeeJob(response){
+    let queryText = 'SELECT id FROM roles WHERE job = (?)'
+    await query(queryText, response.job, (err, results) =>{
+
+        if (err) throw err;
+
+        console.log(results[0].id);
+        let tempRoleId = results[0].id;
+
+        employeeManager(response);
+
+        insertEmployee(response, tempRoleId, tempManagerId);
+
+        initialQuestion();
+    })
+}
+
+async function employeeManager(response){
+    let queryText = 'SELECT id FROM employees WHERE lastName = (?)'
+    await query(queryText, response.manager, (err, results) =>{
+
+        if (err) throw err;
+
+        console.log(results[0].id);
+        let tempManagerId = results[0].id;
+    })
+}
+
+async function insertEmployee(response, tempRoleId, tempManagerId){
+    let insertText = 'INSERT INTO employees (firstName, lastName, role_id, manager_id) VALUES (?, ?, ?, ?)'
+    await query(insertText, [response.firstName, response.lastName, tempRoleId, tempManagerId])
+    initialQuestion()
+}
+
+//==============================================================================================================================
 
 
 //TODO updateEmployee()
@@ -223,25 +290,6 @@ const updateEmployee = async () => {
 }
 
 
-
-async function insertRole(response){
-    let queryText = 'SELECT id FROM departments WHERE department = (?)'
-    await query(queryText, response.department, (err, results) => {
-
-        if (err) throw err;
-
-        console.log(results[0].id);
-        let tempResult = results[0].id;
-
-        finalRoles(response, tempResult);
-        console.log('The role has been added');
-    })
-}
-async function finalRoles(response, tempResult){
-    let insertText = 'INSERT INTO roles (job, salary, dept_id) VALUES (?, ?, ?)'
-    await query(insertText, [response.job, response.salary, tempResult])
-    initialQuestion()
-}   
 
 
 
